@@ -300,6 +300,7 @@ private[stream] object VirtualProcessor {
   case object Completed extends Termination
   case class Failed(ex: Throwable) extends Termination
 
+  // FIXME this is not a legal Subscriber in the RS sense as a Subscriber may never be attached to more than 1 Publisher
   private object InertSubscriber extends Subscriber[Any] {
     override def onSubscribe(s: Subscription): Unit = s.cancel()
     override def onNext(elem: Any): Unit = ()
@@ -403,12 +404,12 @@ private[stream] final class VirtualProcessor[T] extends Processor[T, T] {
  * INTERNAL API
  */
 private[stream] final case class MaterializedValueSource[M](
-  shape: SourceShape[M] = SourceShape[M](new Outlet[M]("Materialized.out")),
+  shape: SourceShape[M] = SourceShape[M](Outlet[M]("Materialized.out")),
   attributes: Attributes = Attributes.name("Materialized")) extends StreamLayout.Module {
 
   override def subModules: Set[Module] = Set.empty
   override def withAttributes(attr: Attributes): Module = this.copy(shape = amendShape(attr), attributes = attr)
-  override def carbonCopy: Module = this.copy(shape = SourceShape(new Outlet[M]("Materialized.out")))
+  override def carbonCopy: Module = this.copy(shape = SourceShape(Outlet[M]("Materialized.out")))
 
   override def replaceShape(s: Shape): Module =
     if (s == shape) this
@@ -418,7 +419,7 @@ private[stream] final case class MaterializedValueSource[M](
     attr.nameOption match {
       case None ⇒ shape
       case s: Some[String] if s == attributes.nameOption ⇒ shape
-      case Some(name) ⇒ shape.copy(outlet = new Outlet(name + ".out"))
+      case Some(name) ⇒ shape.copy(outlet = Outlet(name + ".out"))
     }
   }
 

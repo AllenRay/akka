@@ -17,11 +17,12 @@ object FlattenStrategy {
    * emitting its elements directly to the output until it completes and then taking the next stream. This has the
    * consequence that if one of the input stream is infinite, no other streams after that will be consumed from.
    */
-  def concat[T, U]: FlattenStrategy[Source[T, U], T] = Concat[T, U]()
+  def concat[T, U]: FlattenStrategy[Source[T, U], T] = _concat.asInstanceOf[FlattenStrategy[Source[T, U], T]]
 
+  private[this] final val _concat = Concat[Any]()
   /**
    * INTERNAL API
    */
-  private[akka] final case class Concat[T, U]() extends FlattenStrategy[Source[T, U], T]
+  private[akka] final case class Concat[T]() extends FlattenStrategy[Source[T, Any], T]
 
 }
